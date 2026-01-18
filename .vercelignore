@@ -20,6 +20,7 @@ runtime.txt
 !api/
 !templates/
 !public/
-!model.keras
+# Exclude large model file - will be loaded from cloud storage
+model.keras
 !vercel.json
 !requirements.txt

@@ -26,7 +26,8 @@
   "functions": {
     "api/**/*.py": {
       "runtime": "python3.11",
-      "maxLambdaSize": "500mb"
+      "maxLambdaSize": "500mb",
+      "maxDuration": 30
     }
   },
   "regions": ["iad1"]
