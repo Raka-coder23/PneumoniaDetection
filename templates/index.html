@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pneumonia Prediction</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f4f6f8;
+            margin: 0;
+            padding: 0;
+        }
+        .form-container {
+            max-width: 500px;
+            margin: 80px auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .result {
+            font-size: 1.4em;
+            text-align: center;
+            margin-top: 25px;
+        }
+        .preview {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .preview img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+        .confidence-bar {
+            margin-top: 15px;
+            text-align: center;
+        }
+        .bar-container {
+            background-color: #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .bar-fill {
+            background-color: #4CAF50;
+            color: white;
+            padding: 6px 0;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Pneumonia Prediction</h2>
+        <form action="/predict" method="post" enctype="multipart/form-data">
+            <label for="image">Upload Chest X-ray:</label>
+            <input type="file" name="image" accept="image/*" required>
+            <input type="submit" value="Predict">
+        </form>
+
+        {% if prediction_text %}
+        <div class="result">
+            {% if "Pneumonia" in prediction_text %}
+                <span style="color: #e53935;">🩺 {{ prediction_text }}</span>
+            {% else %}
+                <span style="color: #43a047;">✅ {{ prediction_text }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if percentage %}
+        <div class="confidence-bar">
+            <label style="font-weight: bold;">Confidence:</label>
+            <div class="bar-container">
+                <div class="bar-fill" style="width: {{ percentage }}%">
+                    {{ percentage }}%
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if image_name %}
+        <div class="preview">
+            <img src="{{ url_for('static', filename='uploads/' + image_name) }}" alt="Uploaded X-ray">
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
