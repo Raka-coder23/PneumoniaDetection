@@ -1,0 +1,25 @@
+# Exclude development files
+myenv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Exclude original Flask files
+app.py
+Procfile
+runtime.txt
+
+# Exclude git and IDE files
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Keep only necessary files for deployment
+!api/
+!templates/
+!public/
+!model.keras
+!vercel.json
+!requirements.txt

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Pneumonia Prediction</title>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js@1.12.0/src/toastify.min.css">
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -85,38 +87,115 @@
 <body>
     <div class="form-container">
         <h2>Pneumonia Prediction</h2>
-        <form action="/predict" method="post" enctype="multipart/form-data">
+        <form id="predictionForm">
             <label for="image">Upload Chest X-ray:</label>
-            <input type="file" name="image" accept="image/*" required>
+            <input type="file" id="imageInput" name="image" accept="image/*" required>
             <input type="submit" value="Predict">
         </form>
 
-        {% if prediction_text %}
-        <div class="result">
-            {% if "Pneumonia" in prediction_text %}
-                <span style="color: #e53935;">🩺 {{ prediction_text }}</span>
-            {% else %}
-                <span style="color: #43a047;">✅ {{ prediction_text }}</span>
-            {% endif %}
+        <div id="loading" style="display: none; text-align: center; margin-top: 20px;">
+            <p>🔄 Analyzing image... Please wait.</p>
         </div>
-        {% endif %}
 
-        {% if percentage %}
-        <div class="confidence-bar">
+        <div id="result" class="result" style="display: none;"></div>
+
+        <div id="confidenceBar" class="confidence-bar" style="display: none;">
             <label style="font-weight: bold;">Confidence:</label>
             <div class="bar-container">
-                <div class="bar-fill" style="width: {{ percentage }}%">
-                    {{ percentage }}%
+                <div class="bar-fill" id="barFill" style="width: 0%">
+                    <span id="percentageText">0%</span>
                 </div>
             </div>
         </div>
-        {% endif %}
 
-        {% if image_name %}
-        <div class="preview">
-            <img src="{{ url_for('static', filename='uploads/' + image_name) }}" alt="Uploaded X-ray">
+        <div id="preview" class="preview" style="display: none;">
+            <h3>Uploaded Image Preview:</h3>
+            <img id="uploadedImage" alt="Uploaded X-ray" style="max-width: 300px; border: 2px solid #ddd;">
         </div>
-        {% endif %}
     </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showToast('Please select an image file.', 'error');
+                return;
+            }
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+            document.getElementById('confidenceBar').style.display = 'none';
+            document.getElementById('preview').style.display = 'none';
+
+            try {
+                // Convert image to base64
+                const base64 = await fileToBase64(file);
+
+                // Show preview
+                document.getElementById('uploadedImage').src = base64;
+                document.getElementById('preview').style.display = 'block';
+
+                // Send to API
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ image: base64 })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Display result
+                    const resultDiv = document.getElementById('result');
+                    const isPneumonia = data.prediction === 'Pneumonia';
+                    resultDiv.innerHTML = isPneumonia
+                        ? `<span style="color: #e53935;">🩺 ${data.prediction} (${data.percentage}%)</span>`
+                        : `<span style="color: #43a047;">✅ ${data.prediction} (${data.percentage}%)</span>`;
+                    resultDiv.style.display = 'block';
+
+                    // Display confidence bar
+                    document.getElementById('confidenceBar').style.display = 'block';
+                    document.getElementById('barFill').style.width = `${data.percentage}%`;
+                    document.getElementById('percentageText').textContent = `${data.percentage}%`;
+
+                    showToast('Prediction completed successfully!', 'success');
+                } else {
+                    throw new Error(data.error || 'Prediction failed');
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showToast(`Error: ${error.message}`, 'error');
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        function showToast(message, type) {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                backgroundColor: type === 'error' ? "#e53935" : "#43a047",
+            }).showToast();
+        }
+    </script>
 </body>
 </html>
