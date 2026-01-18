@@ -7,7 +7,16 @@ from werkzeug.utils import secure_filename
 from tensorflow.keras.models import load_model
 
 # ✅ Load full model (architecture + weights)
-model_03 = load_model('model.keras')
+model_path = 'model.keras'
+if not os.path.exists(model_path):
+    print("❌ Model file not found! Please ensure model.keras is in the project root.")
+    print("For deployment, you may need to:")
+    print("1. Upload model.keras to a cloud storage (Google Drive, Dropbox, etc.)")
+    print("2. Or use Git LFS for large files")
+    print("3. Or train a smaller model")
+    exit(1)
+
+model_03 = load_model(model_path)
 
 app = Flask(__name__)
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
@@ -59,4 +68,4 @@ def predict():
         return render_template('index.html', prediction_text=f"❌ Error: {str(e)}")
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))
